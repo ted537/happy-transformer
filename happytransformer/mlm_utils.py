@@ -9,9 +9,13 @@ from torch.utils.data import (DataLoader, Dataset, RandomSampler,
 from tqdm import trange
 from tqdm.notebook import tqdm_notebook
 from transformers import AdamW, BertForMaskedLM, BertTokenizer
-from transformers import \
-    WarmupLinearSchedule as get_linear_schedule_with_warmup
 
+try:
+    from transformers import get_linear_schedule_with_warmup
+except ImportError:
+    from transformers import WarmupLinearSchedule \
+        as get_linear_schedule_with_warmup
+    
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
                     level=logging.INFO)

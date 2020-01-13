@@ -462,5 +462,6 @@ class HappyTransformer:
         if self.model_name not in MLM:
             raise NotImplemented
         self.mlm = model
+        self.mlm.eval()
         self.tokenizer = tokenizer
         print("You may use your finetuned model for masked word prediction")

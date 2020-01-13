@@ -15,7 +15,7 @@ try:
 except ImportError:
     from transformers import WarmupLinearSchedule \
         as get_linear_schedule_with_warmup
-    
+
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
                     level=logging.INFO)
@@ -120,7 +120,7 @@ def train(model, tokenizer, train_dataset, batch_size, lr, adam_epsilon, epochs)
     ]
     optimizer = AdamW(optimizer_grouped_parameters, lr=lr, eps=adam_epsilon)
     scheduler = get_linear_schedule_with_warmup(
-        optimizer, warmup_steps=0, t_total=t_total)
+        optimizer, 0, t_total)
 
     # ToDo Case for fp16
 
@@ -281,12 +281,12 @@ class FinetuneMlm():
 
         self.result = None
 
-    def train(self, train_path='s', test_path='s'):
+    def train(self, train_path, test_path):
         self.model.resize_token_embeddings(len(self.tokenizer))
         # Start Train
         self.model.cuda()
         train_dataset = create_dataset(
-            self.tokenizer, file_path=self.train_path)
+            self.tokenizer, file_path=train_path)
         train(self.model, self.tokenizer, train_dataset, batch_size=self.batch_size,
               epochs=self.epochs, lr=self.lr, adam_epsilon=self.adam_epsilon)
 
@@ -295,8 +295,9 @@ class FinetuneMlm():
         # Start Eval
         model, tokenizer = switch_to_new('model')
         model.cuda()
-        test_dataset = create_dataset(self.tokenizer, file_path=self.test_path)
+        test_dataset = create_dataset(self.tokenizer, file_path=test_path)
         self.result = evaluate(model, tokenizer, test_dataset, batch_size=2)
         del test_dataset
         print("Result saved to self.result")
+        model.cpu()
         return self.model, self.tokenizer

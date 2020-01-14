@@ -8,7 +8,8 @@ from torch.utils.data import (DataLoader, Dataset, RandomSampler,
                               SequentialSampler)
 from tqdm import trange
 from tqdm.notebook import tqdm_notebook
-from transformers import AdamW, BertForMaskedLM, BertTokenizer
+from transformers import (AdamW, BertForMaskedLM, BertTokenizer,
+                          RobertaForMaskedLM, RobertaTokenizer)
 
 try:
     from transformers import get_linear_schedule_with_warmup
@@ -160,7 +161,7 @@ def train(model, tokenizer, train_dataset, batch_size, lr, adam_epsilon, epochs)
     model_directory = save_model(model, tokenizer, 'model')
     logger.info("Model saved at %s", model_directory)
 
-    return global_step, tr_loss / global_step
+    return model, tokenizer
 
 
 def save_model(model: object, tokenizer: object, output_dir: str):
@@ -262,6 +263,7 @@ mlm_args = {
 
 }
 
+
 class FinetuneMlm():
     """
 
@@ -278,8 +280,12 @@ class FinetuneMlm():
     """
 
     def __init__(self, model_name, args=mlm_args):
-        self.model = BertForMaskedLM.from_pretrained(model_name)
-        self.tokenizer = BertTokenizer.from_pretrained(model_name)
+        if 'roberta' in model_name:
+            self.model = RobertaForMaskedLM.from_pretrained(model_name)
+            self.tokenizer = RobertaTokenizer.from_pretrained(model_name)
+        else:  # Use bert
+            self.model = BertForMaskedLM.from_pretrained(model_name)
+            self.tokenizer = BertTokenizer.from_pretrained(model_name)
         self.args = args
 
         self.result = None
@@ -290,20 +296,19 @@ class FinetuneMlm():
         self.model.cuda()
         train_dataset = create_dataset(
             self.tokenizer, file_path=train_path)
-        train(self.model, self.tokenizer, train_dataset,
-              batch_size=self.args["batch_size"],
-              epochs=self.args["epochs"],
-              lr=self.args["lr"],
-              adam_epsilon=self.args["adam_epsilon"])
+        self.model, self.tokenizer = train(self.model, self.tokenizer, train_dataset,
+                                           batch_size=self.args["batch_size"],
+                                           epochs=self.args["epochs"],
+                                           lr=self.args["lr"],
+                                           adam_epsilon=self.args["adam_epsilon"])
 
         del train_dataset
 
         # Start Eval
-        model, tokenizer = switch_to_new('model')
-        model.cuda()
+        self.model.cuda()
         test_dataset = create_dataset(self.tokenizer, file_path=test_path)
-        self.result = evaluate(model, tokenizer, test_dataset, batch_size=2)
+        self.result = evaluate(self.model, self.tokenizer, test_dataset, batch_size=2)
         del test_dataset
         print("Result saved to self.result")
-        model.cpu()
+        self.model.cpu()
         return self.model, self.tokenizer

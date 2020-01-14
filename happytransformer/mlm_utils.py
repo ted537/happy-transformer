@@ -254,6 +254,14 @@ def evaluate(model, tokenizer, eval_dataset, batch_size):
     return result
 
 
+mlm_args = {
+    "batch_size": 1,
+    "epochs": 1,
+    "lr": 5e-5,
+    "adam_epsilon": 1e-8
+
+}
+
 class FinetuneMlm():
     """
 
@@ -265,19 +273,14 @@ class FinetuneMlm():
     Number of epochs  = 1
     Learning rate = 5e-5
     Adam epsilon = 1e-8
-    Model = 'bert-base-uncased'
+    model_name = Must be in default transformer name. ie: 'bert-base-uncased'
 
     """
 
-    def __init__(self, batch_size=1, epochs=1, lr=5e-5, adam_epsilon=1e-8,
-                 model_name='bert-base-uncased'):
+    def __init__(self, model_name, args=mlm_args):
         self.model = BertForMaskedLM.from_pretrained(model_name)
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
-
-        self.batch_size = batch_size
-        self.epochs = epochs
-        self.lr = 5e-5
-        self.adam_epsilon = 1e-8
+        self.args = args
 
         self.result = None
 
@@ -287,8 +290,11 @@ class FinetuneMlm():
         self.model.cuda()
         train_dataset = create_dataset(
             self.tokenizer, file_path=train_path)
-        train(self.model, self.tokenizer, train_dataset, batch_size=self.batch_size,
-              epochs=self.epochs, lr=self.lr, adam_epsilon=self.adam_epsilon)
+        train(self.model, self.tokenizer, train_dataset,
+              batch_size=self.args["batch_size"],
+              epochs=self.args["epochs"],
+              lr=self.args["lr"],
+              adam_epsilon=self.args["adam_epsilon"])
 
         del train_dataset
 

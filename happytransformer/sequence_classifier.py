@@ -24,7 +24,14 @@ from transformers import (BertForSequenceClassification,
                                   XLNetForSequenceClassification,
                                   RobertaForSequenceClassification)
 
-from transformers import AdamW, get_linear_schedule_with_warmup
+try:
+    from transformers import get_linear_schedule_with_warmup
+except ImportError:
+    from transformers import WarmupLinearSchedule \
+        as get_linear_schedule_with_warmup
+
+# Gives error for me
+# from transformers import AdamW, get_linear_schedule_with_warmup
 
 
 from happytransformer.classifier_utils import convert_examples_to_features, \

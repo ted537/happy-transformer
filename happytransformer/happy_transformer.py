@@ -7,25 +7,28 @@ HappyTransformer is a wrapper over pytorch_transformers to make it
 easier to use.
 """
 
-import string
-import re
-import os
-import sys
 import csv
 import logging
+import os
+import re
+import string
+import sys
+
 import numpy as np
-import torch
 import pandas as pd
+import torch
+from mlm_utils import FinetuneMlm, word_prediction_args
 
 from happytransformer.classifier_args import classifier_args
 from happytransformer.sequence_classifier import SequenceClassifier
+
 
 # from happytransformer.sequence_classifier import classifier_args
 # from happytransformer.sequence_classifier import SequenceClassifier
 
 class HappyTransformer:
     """
-    Initializes pytroch's transformer models and provided methods for
+    Initializes Pytorch's transformer models and provided methods for
     their basic functionality.
     Philosophy: Automatically make decisions for the user so that they don't
                 have to have any understanding of PyTorch or transformer
@@ -37,7 +40,7 @@ class HappyTransformer:
         self.model = model
         self.model_name = model_name
         self.mlm = None  # Masked Language Model
-        self.seq = None # Sequence Classification
+        self.seq = None  # Sequence Classification
 
         # the following variables are declared in the  child class:
         self.tokenizer = None
@@ -52,15 +55,15 @@ class HappyTransformer:
         self.gpu_support = torch.device("cuda" if torch.cuda.is_available()
                                         else "cpu")
 
-        #logging
+        # logging
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
 
         self.logger.info("Using model: %s", self.gpu_support)
         self.seq_trained = False
+
     def _get_masked_language_model(self):
         pass
-
 
     def predict_mask(self, text: str, options=None, num_results=1):
         """
@@ -93,10 +96,8 @@ class HappyTransformer:
 
         softmax = self._get_prediction_softmax(tokenized_text)
 
-
         if options is not None:
             option_ids = [self.tokenizer.encode(option) for option in options]
-
 
             option_ids = option_ids[:num_results]
             scores = list(map(lambda x: self.soft_sum(x, softmax[0],
@@ -110,18 +111,16 @@ class HappyTransformer:
 
         tupled_predictions = tuple(zip(options, scores))
 
-        if self.model_name == "XLNET": # TODO find other models that also require this
+        if self.model_name == "XLNET":  # TODO find other models that also require this
             tupled_predictions = self.__remove_starting_character(tupled_predictions, "▁")
         if self.model_name == "ROBERTA":
             tupled_predictions = self.__remove_starting_character(tupled_predictions, "Ġ")
             tupled_predictions = self.__switch_prediction(tupled_predictions, "</s>", '.')
 
-
         if self.gpu_support == "cuda":
             torch.cuda.empty_cache()
 
         return self.__format_option_scores(tupled_predictions)
-
 
     def __switch_prediction(self, tupled_predictions, current_token, new_token):
         """
@@ -183,7 +182,7 @@ class HappyTransformer:
             if char not in string.punctuation:
                 pass
             # must be a punctuation symbol
-            elif i+1 >= len(split_text):
+            elif i + 1 >= len(split_text):
                 # is the last punctuation so simply add to the new_text
                 pass
             else:
@@ -213,7 +212,6 @@ class HappyTransformer:
 
         """
 
-
         indexed_tokens = self.tokenizer.convert_tokens_to_ids(text)
         # Convert inputs to PyTorch tensors
         tokens_tensor = torch.tensor([indexed_tokens])
@@ -227,7 +225,6 @@ class HappyTransformer:
                 outputs = self.mlm(tokens_tensor, token_type_ids=segments_tensors)
             else:
                 outputs = self.mlm(tokens_tensor)
-
 
             predictions = outputs[0]
 
@@ -280,7 +277,6 @@ class HappyTransformer:
 
         return segment_ids
 
-
     def _text_verification(self, text: str):
 
         # TODO,  Add cases for the other masked tokens used in common transformer models
@@ -300,8 +296,6 @@ class HappyTransformer:
         if not valid:
             exit()
 
-
-
     @staticmethod
     def soft_sum(option: list, softed, mask_id: int):
         # TODO: Better logic.
@@ -317,7 +311,6 @@ class HappyTransformer:
         """
         # Collects the softmax of all tokens in list
         return np.sum([softed[mask_id][op] for op in option])
-
 
     def init_sequence_classifier(self):
         """
@@ -351,21 +344,19 @@ class HappyTransformer:
         """
         self.logger.info("***** Running Training *****")
 
-
         train_df = self.__process_classifier_data(train_csv_path)
 
         if self.seq is None:
             self.logger.error("Initialize the sequence classifier before training")
             exit()
 
-        sys.stdout = open(os.devnull, 'w') # Disable printing to stop external libraries from printing
+        sys.stdout = open(os.devnull, 'w')  # Disable printing to stop external libraries from printing
         train_df = train_df.astype("str")
         self.seq.train_list_data = train_df.values.tolist()
         del train_df  # done with train_df
         self.seq.train_model()
         self.seq_trained = True
         sys.stdout = sys.__stdout__  # Enable printing
-
 
     def eval_sequence_classifier(self, eval_csv_path):
         """
@@ -381,7 +372,7 @@ class HappyTransformer:
 
         self.logger.info("***** Running evaluation *****")
 
-        sys.stdout = open(os.devnull, 'w') # Disable printing
+        sys.stdout = open(os.devnull, 'w')  # Disable printing
 
         eval_df = self.__process_classifier_data(eval_csv_path)
 
@@ -407,7 +398,7 @@ class HappyTransformer:
         :return: A list of predictions where each prediction index is the same as the corresponding test's index
         """
         self.logger.info("***** Running Testing *****")
-        sys.stdout = open(os.devnull, 'w') # Disable printing
+        sys.stdout = open(os.devnull, 'w')  # Disable printing
 
         test_df = self.__process_classifier_data(test_csv_path, for_test_data=True)
 
@@ -457,3 +448,55 @@ class HappyTransformer:
 
         return data_frame
 
+    def init_train_mwp(self, args):
+        """
+        """
+
+        # TODO Test the sequence classifier with other models
+
+        if self.model_name != "XLNET":
+            if not args:
+                args = word_prediction_args.copy()
+
+            # current implementation:
+            self._get_masked_language_model()
+            self.mwp_trainer = FinetuneMlm(self.mlm, args, self.tokenizer, self.logger)
+
+            self.logger.info("You can now train a masked word prediction model using %s", self.model_name)
+
+        else:
+            # logger error message
+            exit()
+
+    def train_mwp(self, train_path):
+        """
+        Trains the model with masked language modeling loss.
+
+        :param train_path:
+        :return:
+        """
+
+        if self.mwp_trainer is not None:
+
+            self.mlm, self.tokenizer = self.mwp_trainer.train(train_path)
+            self.mwp_trained = True
+
+        else:
+            # logger error message
+            exit()
+
+    def eval_mwp(self, test_path: str):
+        """
+
+        :param test_path:
+        :return:
+        """
+
+        if self.mwp_trained:
+
+            results = self.mwp_trainer.evaluate(test_path)
+
+            return results
+        else:
+            # logger error message
+            exit()

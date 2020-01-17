@@ -8,8 +8,7 @@ from torch.utils.data import (DataLoader, Dataset, RandomSampler,
                               SequentialSampler)
 from tqdm import trange
 from tqdm.notebook import tqdm_notebook
-from transformers import (AdamW, BertForMaskedLM, BertTokenizer,
-                          RobertaForMaskedLM, RobertaTokenizer)
+from transformers import (AdamW)
 
 try:
     from transformers import get_linear_schedule_with_warmup
@@ -158,39 +157,7 @@ def train(model, tokenizer, train_dataset, batch_size, lr, adam_epsilon, epochs)
             global_step += 1
 
     logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
-    model_directory = save_model(model, tokenizer, 'model')
-    logger.info("Model saved at %s", model_directory)
 
-    return model, tokenizer
-
-
-def save_model(model: object, tokenizer: object, output_dir: str):
-    """
-    Saves the model and the tokenizer to the specified output
-    directory.
-
-    :param model: Newly trained bert model
-    :param tokenizer: Newly trained bert tokenizer
-    :param output_dir: Location of model and tokenizer
-    :return: Location of model and tokenizer
-    """
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    model.save_pretrained(output_dir)
-    tokenizer.save_pretrained(output_dir)
-    return output_dir
-
-
-def switch_to_new(output_dir):
-    """
-    Switches to the newly created model/tokenizer in the output
-    directory.
-
-    :param output_dir:
-    :return: New model and tokenizer
-    """
-    model = BertForMaskedLM.from_pretrained(output_dir)
-    tokenizer = BertTokenizer.from_pretrained(output_dir)
     return model, tokenizer
 
 
@@ -245,17 +212,14 @@ def evaluate(model, tokenizer, eval_dataset, batch_size):
     perplexity = torch.exp(torch.tensor(eval_loss))
 
     result = {
-        'perplexity': perplexity
+        'perplexity': perplexity,
+        'eval_loss': eval_loss
     }
-
-    logger.info("***** Eval results *****")
-    for key in sorted(result.keys()):
-        logger.info("  %s = %s", key, str(result[key]))
 
     return result
 
 
-mlm_args = {
+word_prediction_args = {
     "batch_size": 1,
     "epochs": 1,
     "lr": 5e-5,
@@ -279,36 +243,31 @@ class FinetuneMlm():
 
     """
 
-    def __init__(self, model_name, args=mlm_args):
-        if 'roberta' in model_name:
-            self.model = RobertaForMaskedLM.from_pretrained(model_name)
-            self.tokenizer = RobertaTokenizer.from_pretrained(model_name)
-        else:  # Use bert
-            self.model = BertForMaskedLM.from_pretrained(model_name)
-            self.tokenizer = BertTokenizer.from_pretrained(model_name)
+    def __init__(self, mlm, args, tokenizer, logger):
+        self.mlm = mlm
+        self.tokenizer = tokenizer
         self.args = args
+        self.logger = logger
 
-        self.result = None
-
-    def train(self, train_path, test_path):
-        self.model.resize_token_embeddings(len(self.tokenizer))
+    def train(self, train_path):
+        self.mlm.resize_token_embeddings(len(self.tokenizer))
         # Start Train
-        self.model.cuda()
+        self.mlm.cuda()
         train_dataset = create_dataset(
             self.tokenizer, file_path=train_path)
-        self.model, self.tokenizer = train(self.model, self.tokenizer, train_dataset,
-                                           batch_size=self.args["batch_size"],
-                                           epochs=self.args["epochs"],
-                                           lr=self.args["lr"],
-                                           adam_epsilon=self.args["adam_epsilon"])
+        self.mlm, self.tokenizer = train(self.mlm, self.tokenizer, train_dataset,
+                                         batch_size=self.args["batch_size"],
+                                         epochs=self.args["epochs"],
+                                         lr=self.args["lr"],
+                                         adam_epsilon=self.args["adam_epsilon"])
 
         del train_dataset
 
-        # Start Eval
-        self.model.cuda()
+    def evaluate(self, test_path):
+        self.mlm.cuda()
         test_dataset = create_dataset(self.tokenizer, file_path=test_path)
-        self.result = evaluate(self.model, self.tokenizer, test_dataset, batch_size=2)
+        result = evaluate(self.mlm, self.tokenizer, test_dataset, batch_size=2)
         del test_dataset
         print("Result saved to self.result")
-        self.model.cpu()
-        return self.model, self.tokenizer
+        self.mlm.cpu()
+        return result

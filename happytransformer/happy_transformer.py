@@ -448,15 +448,13 @@ class HappyTransformer:
 
         return data_frame
 
-    def init_train_mwp(self, args):
+    def init_train_mwp(self, args=word_prediction_args):
         """
         """
 
         # TODO Test the sequence classifier with other models
 
         if self.model_name != "XLNET":
-            if not args:
-                args = word_prediction_args.copy()
 
             # current implementation:
             self._get_masked_language_model()

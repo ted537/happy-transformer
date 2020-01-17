@@ -262,6 +262,7 @@ class FinetuneMlm():
                                          adam_epsilon=self.args["adam_epsilon"])
 
         del train_dataset
+        return self.mlm, self.tokenizer
 
     def evaluate(self, test_path):
         self.mlm.cuda()

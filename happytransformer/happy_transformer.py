@@ -17,9 +17,9 @@ import sys
 import numpy as np
 import pandas as pd
 import torch
-from mlm_utils import FinetuneMlm, word_prediction_args
 
 from happytransformer.classifier_args import classifier_args
+from happytransformer.mlm_utils import FinetuneMlm, word_prediction_args
 from happytransformer.sequence_classifier import SequenceClassifier
 
 

@@ -451,7 +451,7 @@ class HappyTransformer:
 
     def init_train_mwp(self, args=None):
         """
-        Initializes the MLM for fine-tuning on masked word prediction
+        Initializes the MLM for fine-tuning on masked word prediction.
         If args are not supplied the following hyperparameters are used:
             batch size = 1
             Number of epochs  = 1
@@ -476,11 +476,11 @@ class HappyTransformer:
             # logger error message
             exit()
 
-    def train_mwp(self, train_path):
+    def train_mwp(self, train_path: str):
         """
         Trains the model with masked language modeling loss.
 
-        train_path: Path to the training file, expected to be a .txt or of similar form
+        train_path: Path to the training file, expected to be a .txt or of similar form.
 
         """
 
@@ -493,11 +493,12 @@ class HappyTransformer:
             # logger error message
             exit()
 
-    def eval_mwp(self, eval_path: str, batch_size: int):
+    def eval_mwp(self, eval_path: str, batch_size: int = 2):
         """
         Evaluates the masked language model and returns the perplexity and the evaluation loss.
 
-        eval_path: Path to the evaluation file, expected to be a .txt or similar
+        eval_path: Path to the evaluation file, expected to be a .txt or similar.
+        batch_size: Depending on the gpu the user may increase or decrease batch size.
 
         """
 

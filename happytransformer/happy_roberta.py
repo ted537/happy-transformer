@@ -4,9 +4,10 @@ HappyROBERTA: a wrapper over PyTorch's RoBERTa implementation
 # disable pylint TODO warning
 # pylint: disable=W0511
 
+from transformers import RobertaForMaskedLM, RobertaTokenizer
+
 from happytransformer.happy_transformer import HappyTransformer
 
-from transformers import RobertaForMaskedLM, RobertaTokenizer
 
 class HappyROBERTA(HappyTransformer):
     """
@@ -49,4 +50,4 @@ class HappyROBERTA(HappyTransformer):
         self.mlm = model
         self.mlm.eval()
         self.tokenizer = tokenizer
-        print("You may use your finetuned model for masked word prediction")
+        self.logger.info("You may use your fine-tuned model for masked word prediction")

@@ -6,13 +6,13 @@ HappyBERT: a wrapper over PyTorch's BERT implementation
 # disable pylint TODO warning
 # pylint: disable=W0511
 import re
+
+import torch
 from transformers import (
     BertForMaskedLM,
     BertForNextSentencePrediction,
     BertTokenizer
 )
-
-import torch
 
 from happytransformer.happy_transformer import HappyTransformer
 
@@ -118,4 +118,4 @@ class HappyBERT(HappyTransformer):
         self.mlm = model
         self.mlm.eval()
         self.tokenizer = tokenizer
-        print("You may use your finetuned model for masked word prediction")
+        self.logger.info("You may use your fine-tuned model for masked word prediction")

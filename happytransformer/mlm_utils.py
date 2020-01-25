@@ -1,3 +1,12 @@
+"""
+BERT and ROBERTA masked language model fine-tuning:
+
+Credit: The code below is from this file
+        https://github.com/huggingface/transformers/blob/master/examples/run_lm_finetuning.py
+
+"""
+
+
 import logging
 import os
 import random
@@ -264,7 +273,7 @@ class FinetuneMlm():
         del train_dataset
         return self.mlm, self.tokenizer
 
-    def evaluate(self, test_path, batch_size=2):
+    def evaluate(self, test_path, batch_size):
         self.mlm.cuda()
         test_dataset = create_dataset(self.tokenizer, file_path=test_path)
         result = evaluate(self.mlm, self.tokenizer, test_dataset, batch_size=batch_size)

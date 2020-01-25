@@ -451,7 +451,7 @@ class HappyTransformer:
 
         return data_frame
 
-    def init_train_mwp(self, args):
+    def init_train_mwp(self, args=None):
         """
         Initializes the MLM for fine-tuning on masked word prediction
         If args are not supplied the following hyperparameters are used:
@@ -459,6 +459,7 @@ class HappyTransformer:
             Number of epochs  = 1
             Learning rate = 5e-5
             Adam epsilon = 1e-8
+
         """
         if not args:
             self.mlm_args = word_prediction_args
@@ -481,7 +482,8 @@ class HappyTransformer:
         """
         Trains the model with masked language modeling loss.
 
-        :param train_path: Path to the training file, expected to be a .txt or of similar form
+        train_path: Path to the training file, expected to be a .txt or of similar form
+
         """
 
         if self.mwp_trainer is not None:
@@ -497,7 +499,8 @@ class HappyTransformer:
         """
         Evaluates the masked language model and returns the perplexity and the evaluation loss.
 
-        :param eval_path: Path to the evaluation file, expected to be a .txt or similar
+        eval_path: Path to the evaluation file, expected to be a .txt or similar
+
         """
 
         if self.mwp_trained:

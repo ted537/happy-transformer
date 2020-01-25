@@ -264,11 +264,10 @@ class FinetuneMlm():
         del train_dataset
         return self.mlm, self.tokenizer
 
-    def evaluate(self, test_path):
+    def evaluate(self, test_path, batch_size=2):
         self.mlm.cuda()
         test_dataset = create_dataset(self.tokenizer, file_path=test_path)
-        result = evaluate(self.mlm, self.tokenizer, test_dataset, batch_size=2)
+        result = evaluate(self.mlm, self.tokenizer, test_dataset, batch_size=batch_size)
         del test_dataset
-        print("Result saved to self.result")
         self.mlm.cpu()
         return result

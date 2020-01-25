@@ -43,7 +43,6 @@ class HappyTransformer:
         self.mlm_args = None  # Mask Language Model Finetuning
         self.seq = None  # Sequence Classification
 
-
         # the following variables are declared in the  child class:
         self.tokenizer = None
         self.cls_token = None
@@ -63,7 +62,6 @@ class HappyTransformer:
 
         self.logger.info("Using model: %s", self.gpu_support)
         self.seq_trained = False
-
 
     def _get_masked_language_model(self):
         pass
@@ -495,7 +493,7 @@ class HappyTransformer:
             # logger error message
             exit()
 
-    def eval_mwp(self, eval_path: str):
+    def eval_mwp(self, eval_path: str, batch_size: int):
         """
         Evaluates the masked language model and returns the perplexity and the evaluation loss.
 
@@ -505,7 +503,7 @@ class HappyTransformer:
 
         if self.mwp_trained:
 
-            results = self.mwp_trainer.evaluate(eval_path)
+            results = self.mwp_trainer.evaluate(eval_path, batch_size)
 
             return results
         else:

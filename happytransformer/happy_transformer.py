@@ -40,7 +40,9 @@ class HappyTransformer:
         self.model = model
         self.model_name = model_name
         self.mlm = None  # Masked Language Model
+        self.mlm_args = None  # Mask Language Model Finetuning
         self.seq = None  # Sequence Classification
+
 
         # the following variables are declared in the  child class:
         self.tokenizer = None
@@ -61,6 +63,7 @@ class HappyTransformer:
 
         self.logger.info("Using model: %s", self.gpu_support)
         self.seq_trained = False
+
 
     def _get_masked_language_model(self):
         pass
@@ -448,9 +451,17 @@ class HappyTransformer:
 
         return data_frame
 
-    def init_train_mwp(self, args=word_prediction_args):
+    def init_train_mwp(self, args):
         """
+        Initializes the MLM for fine-tuning on masked word prediction
+        If args are not supplied the following hyperparameters are used:
+            batch size = 1
+            Number of epochs  = 1
+            Learning rate = 5e-5
+            Adam epsilon = 1e-8
         """
+        if not args:
+            self.mlm_args = word_prediction_args
 
         # TODO Test the sequence classifier with other models
 
@@ -458,7 +469,7 @@ class HappyTransformer:
 
             # current implementation:
             self._get_masked_language_model()
-            self.mwp_trainer = FinetuneMlm(self.mlm, args, self.tokenizer, self.logger)
+            self.mwp_trainer = FinetuneMlm(self.mlm, self.mlm_args, self.tokenizer, self.logger)
 
             self.logger.info("You can now train a masked word prediction model using %s", self.model_name)
 
@@ -470,8 +481,7 @@ class HappyTransformer:
         """
         Trains the model with masked language modeling loss.
 
-        :param train_path:
-        :return:
+        :param train_path: Path to the training file, expected to be a .txt or of similar form
         """
 
         if self.mwp_trainer is not None:
@@ -483,16 +493,16 @@ class HappyTransformer:
             # logger error message
             exit()
 
-    def eval_mwp(self, test_path: str):
+    def eval_mwp(self, eval_path: str):
         """
+        Evaluates the masked language model and returns the perplexity and the evaluation loss.
 
-        :param test_path:
-        :return:
+        :param eval_path: Path to the evaluation file, expected to be a .txt or similar
         """
 
         if self.mwp_trained:
 
-            results = self.mwp_trainer.evaluate(test_path)
+            results = self.mwp_trainer.evaluate(eval_path)
 
             return results
         else:

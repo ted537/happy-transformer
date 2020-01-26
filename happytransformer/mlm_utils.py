@@ -219,7 +219,7 @@ def evaluate(model, tokenizer, eval_dataset, batch_size):
         nb_eval_steps += 1
 
     eval_loss = eval_loss / nb_eval_steps
-    perplexity = torch.exp(torch.tensor(eval_loss)).double()
+    perplexity = torch.exp(torch.tensor(eval_loss)).item()
 
     result = {
         'perplexity': perplexity,

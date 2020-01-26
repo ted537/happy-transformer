@@ -62,6 +62,7 @@ class HappyTransformer:
 
         self.logger.info("Using model: %s", self.gpu_support)
         self.seq_trained = False
+        self.mwp_trained = False
 
     def _get_masked_language_model(self):
         pass

@@ -487,7 +487,7 @@ class HappyTransformer:
 
         """
 
-        if self.mwp_trainer is not None:
+        if self.mwp_trainer:
 
             if torch.cuda.is_available():
                 self.mlm, self.tokenizer = self.mwp_trainer.train(train_path)
@@ -496,10 +496,9 @@ class HappyTransformer:
                 self.logger.error("You are using %s, you must use a GPU to train a MLM", self.gpu_support)
                 sys.exit()
 
-        else:
+        if self.mwp_trained:
             self.logger.warning("Training on the already fine-tuned model")
             self.mwp_trainer.train(train_path)
-
 
     def eval_mwp(self, eval_path: str, batch_size: int = 2):
         """

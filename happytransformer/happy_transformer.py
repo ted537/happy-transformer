@@ -489,7 +489,7 @@ class HappyTransformer:
 
         if self.mwp_trainer is not None:
 
-            if self.gpu_support is 'cuda':  # Only support GPU at this time
+            if torch.cuda.is_available():
                 self.mlm, self.tokenizer = self.mwp_trainer.train(train_path)
                 self.mwp_trained = True
             else:

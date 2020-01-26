@@ -35,6 +35,7 @@ class HappyTransformer:
         self.model_name = model_name
         self.mlm = None  # Masked Language Model
         self.seq = None # Sequence Classification
+        self.ner = None  # Named Entity Recognition
 
         # the following variables are declared in the  child class:
         self.tokenizer = None
@@ -58,6 +59,8 @@ class HappyTransformer:
     def _get_masked_language_model(self):
         pass
 
+    def _get_named_entity_recognition(self):
+        pass
 
     def predict_mask(self, text: str, options=None, num_results=1):
         """
@@ -476,3 +479,14 @@ class HappyTransformer:
         })
 
         return data_frame
+
+    def name_entities(self, sentence, labels):
+        """
+        """
+        if self.ner is None:
+            self._get_named_entity_recognition()
+        input_ids = self.tokenizer.encode(sentence)
+        token_tensor = torch.tensor(input_ids)
+        with torch.no_grad():
+            _, logit = self.ner(token_tensor, labels=labels)
+        logit = np.argmax(logit.numpy(), axis=2)

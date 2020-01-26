@@ -1,10 +1,11 @@
 """
 BERT and ROBERTA masked language model fine-tuning:
 
-Credit: The code below is from this file
+Credit: This code is a modified version of the code found in this repository under
         https://github.com/huggingface/transformers/blob/master/examples/run_lm_finetuning.py
 
 """
+
 
 
 import logging
@@ -218,7 +219,7 @@ def evaluate(model, tokenizer, eval_dataset, batch_size):
         nb_eval_steps += 1
 
     eval_loss = eval_loss / nb_eval_steps
-    perplexity = torch.exp(torch.tensor(eval_loss))
+    perplexity = torch.exp(torch.tensor(eval_loss)).double()
 
     result = {
         'perplexity': perplexity,

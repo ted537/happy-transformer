@@ -477,7 +477,7 @@ class HappyTransformer:
 
         else:
             self.logger.error("Masked language model training is not available for XLNET")
-            exit()
+            sys.exit()
 
     def train_mwp(self, train_path: str):
         """
@@ -494,7 +494,7 @@ class HappyTransformer:
                 self.mwp_trained = True
             else:
                 self.logger.error("You are using %s, you must use a GPU to train a MLM", self.gpu_support)
-                exit()
+                sys.exit()
 
         else:
             self.logger.warning("Training on the already fine-tuned model")
@@ -510,10 +510,9 @@ class HappyTransformer:
 
         """
 
-        if self.mwp_trained:
-
-            results = self.mwp_trainer.evaluate(eval_path, batch_size)
-
-            return results
-        else:
+        if not self.mwp_trained:
             self.logger.warning("You are evaluating on the pretrained model, not the fine-tuned model.")
+
+        results = self.mwp_trainer.evaluate(eval_path, batch_size)
+
+        return results

@@ -62,6 +62,7 @@ class HappyTransformer:
 
         self.logger.info("Using model: %s", self.gpu_support)
         self.seq_trained = False
+        self.mwp_trainer = None
         self.mwp_trained = False
 
     def _get_masked_language_model(self):
@@ -496,6 +497,9 @@ class HappyTransformer:
             else:
                 self.logger.error("You are using %s, you must use a GPU to train a MLM", self.gpu_support)
                 sys.exit()
+        elif not self.mwp_trainer:
+            self.logger.error("The model is not loaded, consider running init_train_mwp.")
+            sys.exit()
 
         if self.mwp_trained:
             self.logger.warning("Training on the already fine-tuned model")
@@ -512,6 +516,10 @@ class HappyTransformer:
 
         if not self.mwp_trained:
             self.logger.warning("You are evaluating on the pretrained model, not the fine-tuned model.")
+
+        if not self.mwp_trainer:
+            self.logger.error("The model is not loaded, consider running init_train_mwp.")
+            sys.exit()
 
         results = self.mwp_trainer.evaluate(eval_path, batch_size)
 

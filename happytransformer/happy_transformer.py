@@ -461,19 +461,22 @@ class HappyTransformer:
         """
         if not args:
             self.mlm_args = word_prediction_args
+        else:
+            self.mlm_args = args
 
         # TODO Test the sequence classifier with other models
 
         if self.model_name != "XLNET":
 
             # current implementation:
-            self._get_masked_language_model()
+            if not self.mlm:
+                self._get_masked_language_model()  # if already has self.mlm don't call this
             self.mwp_trainer = FinetuneMlm(self.mlm, self.mlm_args, self.tokenizer, self.logger)
 
             self.logger.info("You can now train a masked word prediction model using %s", self.model_name)
 
         else:
-            # logger error message
+            self.logger.error("Masked language model training is not available for XLNET")
             exit()
 
     def train_mwp(self, train_path: str):
@@ -486,12 +489,17 @@ class HappyTransformer:
 
         if self.mwp_trainer is not None:
 
-            self.mlm, self.tokenizer = self.mwp_trainer.train(train_path)
-            self.mwp_trained = True
+            if self.gpu_support is 'cuda':  # Only support GPU at this time
+                self.mlm, self.tokenizer = self.mwp_trainer.train(train_path)
+                self.mwp_trained = True
+            else:
+                self.logger.error("You are using %s, you must use a GPU to train a MLM", self.gpu_support)
+                exit()
 
         else:
-            # logger error message
-            exit()
+            self.logger.warning("Training on the already fine-tuned model")
+            self.mwp_trainer.train(train_path)
+
 
     def eval_mwp(self, eval_path: str, batch_size: int = 2):
         """
@@ -508,5 +516,4 @@ class HappyTransformer:
 
             return results
         else:
-            # logger error message
-            exit()
+            self.logger.warning("You are evaluating on the pretrained model, not the fine-tuned model.")

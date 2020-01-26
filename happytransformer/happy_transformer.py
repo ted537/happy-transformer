@@ -498,7 +498,7 @@ class HappyTransformer:
                 self.logger.error("You are using %s, you must use a GPU to train a MLM", self.gpu_support)
                 sys.exit()
         elif not self.mwp_trainer:
-            self.logger.error("The model is not loaded, consider running init_train_mwp.")
+            self.logger.error("The model is not loaded, you should run init_train_mwp.")
             sys.exit()
 
         if self.mwp_trained:
@@ -513,13 +513,12 @@ class HappyTransformer:
         batch_size: Depending on the gpu the user may increase or decrease batch size.
 
         """
+        if not self.mwp_trainer:
+            self.logger.error("The model is not loaded, you should run init_train_mwp.")
+            sys.exit()
 
         if not self.mwp_trained:
             self.logger.warning("You are evaluating on the pretrained model, not the fine-tuned model.")
-
-        if not self.mwp_trainer:
-            self.logger.error("The model is not loaded, consider running init_train_mwp.")
-            sys.exit()
 
         results = self.mwp_trainer.evaluate(eval_path, batch_size)
 

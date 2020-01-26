@@ -108,14 +108,3 @@ class HappyBERT(HappyTransformer):
                     break
         return True
 
-    def load_finetuned(self, model, tokenizer):
-        """
-        Allows the user to use their finetuned model on masked word prediction
-
-        :param model: Model created by FinetuneMlm.train
-        :param tokenizer: Tokenizer created by FinetuneMlm.train
-        """
-        self.mlm = model
-        self.mlm.eval()
-        self.tokenizer = tokenizer
-        self.logger.info("You may use your fine-tuned model for masked word prediction")

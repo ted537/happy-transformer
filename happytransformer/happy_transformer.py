@@ -480,13 +480,17 @@ class HappyTransformer:
 
         return data_frame
 
-    def name_entities(self, sentence, labels):
+    def name_entities(self, sentence):
         """
         """
         if self.ner is None:
             self._get_named_entity_recognition()
-        input_ids = self.tokenizer.encode(sentence)
-        token_tensor = torch.tensor(input_ids)
+        sentence = sentence.lower().split()
+        input_ids = self.tokenizer.encode(sentence, add_special_tokens=True)
+        token_tensor = torch.tensor(input_ids).unsqueeze(0)
         with torch.no_grad():
-            _, logit = self.ner(token_tensor, labels=labels)
-        logit = np.argmax(logit.numpy(), axis=2)
+            logits = self.ner(token_tensor)[0]
+        logits = np.argmax(logits.numpy(), axis=2)
+        print(type(logits))
+        print(logits)
+        return logits

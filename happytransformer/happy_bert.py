@@ -9,6 +9,7 @@ import re
 from transformers import (
     BertForMaskedLM,
     BertForNextSentencePrediction,
+    BertForTokenClassification,
     BertTokenizer
 )
 
@@ -29,7 +30,8 @@ class HappyBERT(HappyTransformer):
             4. eval_sequence_classifier(eval_csv_path)
             5. test_sequence_classifier(test_csv_path)
         BertForNextSentencePrediction:
-
+        BertForTokenClassification:
+            1. name_entities(sentence)
 
             """
 
@@ -38,6 +40,7 @@ class HappyBERT(HappyTransformer):
         self.mlm = None  # Masked Language Model
         self.nsp = None  # Next Sentence Prediction
         self.qa = None   # Question Answering
+        self.ner = None  # Named Entity Recognition
         self.tokenizer = BertTokenizer.from_pretrained(model)
         self.masked_token = self.tokenizer.mask_token
         self.sep_token = self.tokenizer.sep_token
@@ -57,6 +60,12 @@ class HappyBERT(HappyTransformer):
         self.nsp = BertForNextSentencePrediction.from_pretrained(self.model)
         self.nsp.eval()
 
+    def _get_named_entity_recognition(self):
+        """
+        Initializes the BertForTokenClassification transformer
+        """
+        self.ner = BertForTokenClassification.from_pretrained(self.model)
+        self.ner.eval()
 
     def predict_next_sentence(self, sentence_a, sentence_b):
         """

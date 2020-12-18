@@ -48,7 +48,7 @@ class HappyTransformer:
         self.masked_token = None
 
         # Child class sets to indicate which model is being used
-        self.tag_one_transformers = ['BERT', "ROBERTA", 'XLNET']
+        self.tag_one_transformers = ['BERT', "ROBERTA", 'XLNET', 'TRANSFOXL']
 
         # GPU support
         self.gpu_support = torch.device("cuda" if torch.cuda.is_available()

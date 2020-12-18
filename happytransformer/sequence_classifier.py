@@ -20,9 +20,12 @@ import torch
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
                               TensorDataset)
 
-from transformers import (BertForSequenceClassification,
-                                  XLNetForSequenceClassification,
-                                  RobertaForSequenceClassification)
+from transformers import (
+    BertForSequenceClassification,
+    XLNetForSequenceClassification,
+    RobertaForSequenceClassification,
+    TransfoXLForSequenceClassification
+)
 
 from transformers import AdamW, get_linear_schedule_with_warmup
 
@@ -44,7 +47,8 @@ class SequenceClassifier():
         self.model_classes = {
             'BERT': (BertForSequenceClassification),
             'XLNET': (XLNetForSequenceClassification),
-            'ROBERTA': (RobertaForSequenceClassification)
+            'ROBERTA': (RobertaForSequenceClassification),
+            'TRANSFOXL': TransfoXLForSequenceClassification
         }
         self.train_list_data = None
         self.eval_list_data = None
@@ -284,7 +288,7 @@ class SequenceClassifier():
                                                 # xlnet has a cls token at the end
                                                 cls_token=self.tokenizer.cls_token,
                                                 cls_token_segment_id=2 if self.model_name  in [
-                                                    'XLNET'] else 0,
+                                                    'XLNET','TRANSFOXL'] else 0,
                                                 sep_token=self.tokenizer.sep_token,
                                                 sep_token_extra=bool(self.model_name  in ['ROBERTA']),
                                                 # roberta uses an extra separator b/w pairs of sentences, cf. github.com/pytorch/fairseq/commit/1684e166e3da03f5b600dbb7855cb98ddfcd0805
